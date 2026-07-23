@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "chatbot-mcp-server": {
+      "command": "npm",
+      "args": [
+        "--prefix",
+        "<YOUR_ABSOLUTE_PATH_TO_PROJECT>/chatbot-mcp-server",
+        "run",
+        "start:stdio"
+      ],
+      "env": {}
+    }
+  }
+}
