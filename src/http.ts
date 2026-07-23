@@ -14,7 +14,7 @@ const transports = new Map<string, SSEServerTransport>();
 app.get('/mcp/sse', async (req, res) => {
   try {
     const siteId = req.query.siteId ? Number(req.query.siteId) : undefined;
-    
+
     // SSEServerTransport takes the base URL for the POST endpoint and the Express Response object.
     const transport = new SSEServerTransport('/mcp/messages', res);
     await transport.start();

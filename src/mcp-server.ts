@@ -1,8 +1,5 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 
@@ -26,7 +23,7 @@ export function createMcpServer(contextSiteId?: number) {
       capabilities: {
         tools: {},
       },
-    }
+    },
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -34,7 +31,8 @@ export function createMcpServer(contextSiteId?: number) {
       tools: [
         {
           name: 'getConversationContext',
-          description: 'Get conversation context including status, visitor details, recent messages, and summary.',
+          description:
+            'Get conversation context including status, visitor details, recent messages, and summary.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -60,7 +58,10 @@ export function createMcpServer(contextSiteId?: number) {
           inputSchema: {
             type: 'object',
             properties: {
-              siteId: { type: 'number', description: 'The ID of the site. Optional if derived from context.' }
+              siteId: {
+                type: 'number',
+                description: 'The ID of the site. Optional if derived from context.',
+              },
             },
             required: [],
           },
@@ -72,7 +73,10 @@ export function createMcpServer(contextSiteId?: number) {
             type: 'object',
             properties: {
               query: { type: 'string', description: 'The search query string' },
-              siteId: { type: 'number', description: 'The ID of the site. Optional if derived from context.' }
+              siteId: {
+                type: 'number',
+                description: 'The ID of the site. Optional if derived from context.',
+              },
             },
             required: ['query'],
           },
@@ -119,7 +123,7 @@ export function createMcpServer(contextSiteId?: number) {
       }
 
       if (name === 'searchKnowledge') {
-        const { query, siteId: argSiteId } = args as { query: string, siteId?: number };
+        const { query, siteId: argSiteId } = args as { query: string; siteId?: number };
         const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
         if (!siteId) {
           throw new Error('siteId is required but could not be derived from arguments or context');
@@ -137,7 +141,12 @@ export function createMcpServer(contextSiteId?: number) {
     } catch (error: any) {
       console.error(`Error executing tool ${name}:`, error.message);
       return {
-        content: [{ type: 'text', text: `Error executing tool ${name}: ${error.response?.data?.message || error.message}` }],
+        content: [
+          {
+            type: 'text',
+            text: `Error executing tool ${name}: ${error.response?.data?.message || error.message}`,
+          },
+        ],
         isError: true,
       };
     }
