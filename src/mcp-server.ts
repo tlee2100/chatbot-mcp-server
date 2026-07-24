@@ -36,7 +36,6 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
           inputSchema: {
             type: 'object',
             properties: {},
-            required: [],
           },
         },
         {
@@ -55,7 +54,12 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
           description: 'Get the site configuration and branding for the current site.',
           inputSchema: {
             type: 'object',
-            properties: {},
+            properties: {
+              siteId: {
+                type: 'number',
+                description: 'The ID of the site. Optional if derived from context.',
+              },
+            },
             required: [],
           },
         },
@@ -66,6 +70,10 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
             type: 'object',
             properties: {
               query: { type: 'string', description: 'The search query string' },
+              siteId: {
+                type: 'number',
+                description: 'The ID of the site. Optional if derived from context.',
+              },
             },
             required: ['query'],
           },
@@ -79,7 +87,8 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
 
     try {
       if (name === 'getConversationContext') {
-        const conversationId = contextConversationId || process.env.CONVERSATION_ID;
+        const { conversationId: argConvId } = args as { conversationId?: string };
+        const conversationId = contextConversationId || argConvId;
         if (!conversationId) {
           throw new Error('conversationId is required but could not be derived from context');
         }
@@ -102,7 +111,9 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
       }
 
       if (name === 'getSiteConfig') {
-        const siteId = contextSiteId || process.env.SITE_ID;
+        const { siteId: argSiteId } = args as { siteId?: number };
+        // Derive siteId from arguments, context, or env
+        const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
         if (!siteId) {
           throw new Error('siteId is required but could not be derived from arguments or context');
         }
@@ -113,8 +124,8 @@ export function createMcpServer(contextSiteId?: number, contextConversationId?: 
       }
 
       if (name === 'searchKnowledge') {
-        const { query } = args as { query: string };
-        const siteId = contextSiteId || process.env.SITE_ID;
+        const { query, siteId: argSiteId } = args as { query: string; siteId?: number };
+        const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
         if (!siteId) {
           throw new Error('siteId is required but could not be derived from arguments or context');
         }

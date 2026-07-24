@@ -8,10 +8,7 @@
         "run",
         "start:stdio"
       ],
-      "env": {
-        "SITE_ID": "1",
-        "CONVERSATION_ID": "your-test-conversation-uuid-here"
-      }
+      "env": {}
     }
   }
 }
