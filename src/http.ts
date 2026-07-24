@@ -16,12 +16,13 @@ const transports = new Map<string, SSEServerTransport>();
 app.get('/mcp/sse', async (req, res) => {
   try {
     const siteId = req.query.siteId ? Number(req.query.siteId) : undefined;
+    const conversationId = req.query.conversationId as string | undefined;
 
     // SSEServerTransport takes the base URL for the POST endpoint and the Express Response object.
     const transport = new SSEServerTransport('/mcp/messages', res);
 
     // Create a new MCP Server instance scoped to this connection's context (e.g. siteId)
-    const server = createMcpServer(siteId);
+    const server = createMcpServer(siteId, conversationId);
 
     // Server.connect() will automatically call transport.start()
     await server.connect(transport);

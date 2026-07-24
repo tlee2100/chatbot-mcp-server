@@ -13,7 +13,7 @@ axios.defaults.headers.common['x-internal-api-key'] = INTERNAL_API_KEY;
 
 // We can pass siteId via the factory if it's derived per-connection (like in HTTP SSE)
 // Or we can rely on tool arguments if it's not provided by connection (but the prompt says "derive siteId from validated MCP request context")
-export function createMcpServer(contextSiteId?: number) {
+export function createMcpServer(contextSiteId?: number, contextConversationId?: string) {
   const server = new Server(
     {
       name: 'chatbot-mcp-server',
@@ -35,10 +35,8 @@ export function createMcpServer(contextSiteId?: number) {
             'Get conversation context including status, visitor details, recent messages, and summary.',
           inputSchema: {
             type: 'object',
-            properties: {
-              conversationId: { type: 'string', description: 'The UUID of the conversation' },
-            },
-            required: ['conversationId'],
+            properties: {},
+            required: [],
           },
         },
         {
@@ -57,12 +55,7 @@ export function createMcpServer(contextSiteId?: number) {
           description: 'Get the site configuration and branding for the current site.',
           inputSchema: {
             type: 'object',
-            properties: {
-              siteId: {
-                type: 'number',
-                description: 'The ID of the site. Optional if derived from context.',
-              },
-            },
+            properties: {},
             required: [],
           },
         },
@@ -73,10 +66,6 @@ export function createMcpServer(contextSiteId?: number) {
             type: 'object',
             properties: {
               query: { type: 'string', description: 'The search query string' },
-              siteId: {
-                type: 'number',
-                description: 'The ID of the site. Optional if derived from context.',
-              },
             },
             required: ['query'],
           },
@@ -90,7 +79,10 @@ export function createMcpServer(contextSiteId?: number) {
 
     try {
       if (name === 'getConversationContext') {
-        const { conversationId } = args as { conversationId: string };
+        const conversationId = contextConversationId || process.env.CONVERSATION_ID;
+        if (!conversationId) {
+          throw new Error('conversationId is required but could not be derived from context');
+        }
         const response = await axios.get(`${API_BASE_URL}/conversations/${conversationId}/context`);
         let dataStr = JSON.stringify(response.data);
         if (dataStr.length > 7000) {
@@ -110,9 +102,7 @@ export function createMcpServer(contextSiteId?: number) {
       }
 
       if (name === 'getSiteConfig') {
-        const { siteId: argSiteId } = args as { siteId?: number };
-        // Derive siteId from arguments, context, or env
-        const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
+        const siteId = contextSiteId || process.env.SITE_ID;
         if (!siteId) {
           throw new Error('siteId is required but could not be derived from arguments or context');
         }
@@ -123,8 +113,8 @@ export function createMcpServer(contextSiteId?: number) {
       }
 
       if (name === 'searchKnowledge') {
-        const { query, siteId: argSiteId } = args as { query: string; siteId?: number };
-        const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
+        const { query } = args as { query: string };
+        const siteId = contextSiteId || process.env.SITE_ID;
         if (!siteId) {
           throw new Error('siteId is required but could not be derived from arguments or context');
         }
