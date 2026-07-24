@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { createMcpServer } from './mcp-server';
 import * as dotenv from 'dotenv';
@@ -6,6 +7,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // In-memory store for active SSE transports
