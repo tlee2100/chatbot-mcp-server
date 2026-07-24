@@ -81,6 +81,22 @@ export function createMcpServer(contextSiteId?: number) {
             required: ['query'],
           },
         },
+        {
+          name: 'requestHumanAgent',
+          description:
+            'Request a human agent for handoff. Emits a notification to the admin dashboard.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              conversationId: { type: 'string', description: 'The UUID of the conversation' },
+              siteId: {
+                type: 'number',
+                description: 'The ID of the site. Optional if derived from context.',
+              },
+            },
+            required: ['conversationId'],
+          },
+        },
       ],
     };
   });
@@ -134,6 +150,29 @@ export function createMcpServer(contextSiteId?: number) {
         });
         return {
           content: [{ type: 'text', text: JSON.stringify(response.data) }],
+        };
+      }
+
+      if (name === 'requestHumanAgent') {
+        const { conversationId, siteId: argSiteId } = args as {
+          conversationId: string;
+          siteId?: number;
+        };
+        const siteId = argSiteId || contextSiteId || process.env.SITE_ID;
+        if (!siteId) {
+          throw new Error('siteId is required but could not be derived from arguments or context');
+        }
+        await axios.post(`${API_BASE_URL}/handoff`, {
+          conversationId,
+          siteId: Number(siteId),
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Handoff requested successfully for conversation ${conversationId}`,
+            },
+          ],
         };
       }
 

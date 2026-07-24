@@ -17,7 +17,12 @@ app.get('/mcp/sse', async (req, res) => {
 
     // SSEServerTransport takes the base URL for the POST endpoint and the Express Response object.
     const transport = new SSEServerTransport('/mcp/messages', res);
-    await transport.start();
+
+    // Create a new MCP Server instance scoped to this connection's context (e.g. siteId)
+    const server = createMcpServer(siteId);
+
+    // Server.connect() will automatically call transport.start()
+    await server.connect(transport);
 
     // After starting, the transport assigns a sessionId
     const sessionId = transport.sessionId;
@@ -26,13 +31,11 @@ app.get('/mcp/sse', async (req, res) => {
     }
 
     transports.set(sessionId, transport);
-
-    // Create a new MCP Server instance scoped to this connection's context (e.g. siteId)
-    const server = createMcpServer(siteId);
-    await server.connect(transport);
+    console.log(`[HTTP] Connected server for session ${sessionId}`);
 
     // Clean up when the connection closes
     req.on('close', () => {
+      console.log(`[HTTP] Connection closed for session ${sessionId}`);
       transports.delete(sessionId);
     });
   } catch (error) {
@@ -49,19 +52,29 @@ app.post('/mcp/messages', async (req, res) => {
 
   const transport = transports.get(sessionId);
   if (!transport) {
+    console.log(`[HTTP POST] Session not found: ${sessionId}`);
     return res.status(404).send('Session not found');
   }
 
   try {
+    console.log(`[HTTP POST] Handling message for session ${sessionId}`);
     // Pass the request to the transport to handle incoming JSON-RPC messages
-    await transport.handlePostMessage(req, res);
+    await transport.handlePostMessage(req, res, req.body);
   } catch (error) {
     console.error(`Error handling message for session ${sessionId}:`, error);
     res.status(500).end();
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`MCP HTTP Server listening on port ${PORT}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
 });
